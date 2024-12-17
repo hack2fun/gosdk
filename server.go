@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 	"time"
-	
+
 	cysicTypes "github.com/cysic-tech/gosdk/types/cysic"
 
 	sdkClient "github.com/cosmos/cosmos-sdk/client"
@@ -353,6 +353,9 @@ func (s *Server) BroadcastTx(txBytes []byte) (*sdk.TxResponse, error) {
 	})
 	if errRes := sdkClient.CheckTendermintError(err, txBytes); errRes != nil {
 		return errRes, nil
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	return res.TxResponse, err
