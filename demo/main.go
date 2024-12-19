@@ -210,7 +210,7 @@ func claimReward(signer cysicSDK.Signer, validatorAddr string) {
 func convertToCGT(signer cysicSDK.Signer, amount sdkmath.Int) {
 	fmt.Print("before swap to CGT: ")
 	printBalance(signer.EthAddr.String())
-	txHash, err := defaultServer.ExchangeToGovToken(signer, &govTokenTypes.MsgExchangeToGovToken{
+	txHash, err := defaultServer.ExchangeToCGT(signer, &govTokenTypes.MsgExchangeToGovToken{
 		Sender: signer.CosmosAddr.String(),
 		Amount: amount,
 	})
@@ -228,7 +228,7 @@ func convertToCGT(signer cysicSDK.Signer, amount sdkmath.Int) {
 func convertToCYS(signer cysicSDK.Signer, amount sdkmath.Int) {
 	fmt.Print("before swap to CYS: ")
 	printBalance(signer.EthAddr.String())
-	txHash, err := defaultServer.ExchangeToPlatformToken(signer, &govTokenTypes.MsgExchangeToPlatformToken{
+	txHash, err := defaultServer.ExchangeToCYS(signer, &govTokenTypes.MsgExchangeToPlatformToken{
 		Sender: signer.CosmosAddr.String(),
 		Amount: amount,
 	})
