@@ -9,7 +9,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (s *Server) ExchangeToGovToken(signer Signer, exchangeDetail *govTokenTypes.MsgExchangeToGovToken) (string, error) {
+// ExchangeToCGT exchanges tokens to governance tokens.
+//
+// @param signer the Signer instance used to sign the transaction
+// @param exchangeDetail the exchange details
+// @return the transaction hash as a string, or an error if the exchange fails
+func (s *Server) ExchangeToCGT(signer Signer, exchangeDetail *govTokenTypes.MsgExchangeToGovToken) (string, error) {
 	if err := s.KeepGrpcConn(); err != nil {
 		log.Printf("error when keep grpc conn, endpoint: %v, err: %v", s.EndPoint, err.Error())
 		return "", err
@@ -31,7 +36,12 @@ func (s *Server) ExchangeToGovToken(signer Signer, exchangeDetail *govTokenTypes
 	return txHash, nil
 }
 
-func (s *Server) ExchangeToPlatformToken(signer Signer, exchangeDetail *govTokenTypes.MsgExchangeToPlatformToken) (string, error) {
+// ExchangeToCYS exchanges tokens to platform tokens.
+//
+// @param signer the Signer instance used to sign the transaction
+// @param exchangeDetail the exchange details
+// @return the transaction hash as a string, or an error if the exchange fails
+func (s *Server) ExchangeToCYS(signer Signer, exchangeDetail *govTokenTypes.MsgExchangeToPlatformToken) (string, error) {
 	if err := s.KeepGrpcConn(); err != nil {
 		log.Printf("error when keep grpc conn, endpoint: %v, err: %v", s.EndPoint, err.Error())
 		return "", err

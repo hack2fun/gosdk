@@ -12,7 +12,10 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// QueryDelegatorDelegations
+// QueryDelegatorDelegations queries the delegations of a delegator.
+//
+// @param delegatorAddress the address of the delegator
+// @return a list of coins representing the delegations, or an error if the query fails
 func (s *Server) QueryDelegatorDelegations(delegatorAddress string) ([]sdk.Coin, error) {
 	result := make([]sdk.Coin, 0)
 	if err := s.KeepGrpcConn(); err != nil {
@@ -22,7 +25,7 @@ func (s *Server) QueryDelegatorDelegations(delegatorAddress string) ([]sdk.Coin,
 
 	client := stakingtypes.NewQueryClient(s.Conn)
 
-	targetAddr, err := ConvertToCosmosAddress(delegatorAddress)
+	targetAddr, err := ConvertToCysicAddress(delegatorAddress)
 	if err != nil {
 		log.Printf("error when convert addr: %v to cosmosAddr, err: %v", delegatorAddress, err.Error())
 		return result, err
@@ -61,7 +64,10 @@ func (s *Server) QueryDelegatorDelegations(delegatorAddress string) ([]sdk.Coin,
 	return result, nil
 }
 
-// QueryDelegateReward
+// QueryDelegateReward queries the rewards for a delegator.
+//
+// @param delegatorAddress the address of the delegator
+// @return a list of coins representing the rewards, or an error if the query fails
 func (s *Server) QueryDelegateReward(delegatorAddress string) ([]sdk.Coin, error) {
 	result := make([]sdk.Coin, 0)
 	if err := s.KeepGrpcConn(); err != nil {
@@ -71,7 +77,7 @@ func (s *Server) QueryDelegateReward(delegatorAddress string) ([]sdk.Coin, error
 
 	client := distributiontypes.NewQueryClient(s.Conn)
 
-	targetAddr, err := ConvertToCosmosAddress(delegatorAddress)
+	targetAddr, err := ConvertToCysicAddress(delegatorAddress)
 	if err != nil {
 		log.Printf("error when convert addr: %v to cosmosAddr, err: %v", delegatorAddress, err.Error())
 		return result, err
@@ -109,7 +115,11 @@ func (s *Server) QueryDelegateReward(delegatorAddress string) ([]sdk.Coin, error
 	return result, nil
 }
 
-// WithdrawDelegatorReward
+// WithdrawDelegatorReward withdraws rewards for a delegator.
+//
+// @param signer the Signer instance used to sign the transaction
+// @param validatorAddress the address of the validator
+// @return the transaction hash as a string, or an error if the withdrawal fails
 func (s *Server) WithdrawDelegatorReward(signer Signer, validatorAddress string) (string, error) {
 	delegatorAddr := signer.CosmosAddr.String()
 
@@ -130,7 +140,13 @@ func (s *Server) WithdrawDelegatorReward(signer Signer, validatorAddress string)
 	return s.buildAndBroadcastCosmosTx(signer, []sdk.Msg{msg})
 }
 
-// DelegateVeToken
+// DelegateVeToken delegates veTokens to a validator.
+//
+// @param signer the Signer instance used to sign the transaction
+// @param validatorAddress the address of the validator
+// @param coin the token to delegate
+// @param amount the amount to delegate
+// @return the transaction hash as a string, or an error if the delegation fails
 func (s *Server) DelegateVeToken(signer Signer, validatorAddress string, coin string, amount math.Int) (string, error) {
 	msg := &delegatetypes.MsgDelegate{
 		Worker:    signer.EthAddr.String(),
@@ -151,13 +167,18 @@ func (s *Server) DelegateVeToken(signer Signer, validatorAddress string, coin st
 	return s.buildAndBroadcastCosmosTx(signer, []sdk.Msg{msg})
 }
 
-// DelegateCGT
+// DelegateCGT delegates CGT tokens to a validator.
+//
+// @param signer the Signer instance used to sign the transaction
+// @param validatorAddress the address of the validator
+// @param amount the amount to delegate
+// @return the transaction hash as a string, or an error if the delegation fails
 func (s *Server) DelegateCGT(signer Signer, validatorAddress string, amount math.Int) (string, error) {
 	msg := &stakingtypes.MsgDelegate{
 		DelegatorAddress: signer.CosmosAddr.String(),
 		ValidatorAddress: validatorAddress,
 		Amount: sdk.Coin{
-			Denom:  GovToken,
+			Denom:  CGTToken,
 			Amount: amount,
 		},
 	}
@@ -174,13 +195,18 @@ func (s *Server) DelegateCGT(signer Signer, validatorAddress string, amount math
 	return s.buildAndBroadcastCosmosTx(signer, []sdk.Msg{msg})
 }
 
-// UnDelegateCGT
+// UnDelegateCGT undelegates CGT tokens from a validator.
+//
+// @param signer the Signer instance used to sign the transaction
+// @param validatorAddress the address of the validator
+// @param amount the amount to undelegate
+// @return the transaction hash as a string, or an error if the undelegation fails
 func (s *Server) UnDelegateCGT(signer Signer, validatorAddress string, amount math.Int) (string, error) {
 	msg := &stakingtypes.MsgUndelegate{
 		DelegatorAddress: signer.CosmosAddr.String(),
 		ValidatorAddress: validatorAddress,
 		Amount: sdk.Coin{
-			Denom:  GovToken,
+			Denom:  CGTToken,
 			Amount: amount,
 		},
 	}

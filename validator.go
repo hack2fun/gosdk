@@ -10,6 +10,10 @@ import (
 	"google.golang.org/grpc"
 )
 
+// GetValidator retrieves a validator by address.
+//
+// @param addr the address of the validator
+// @return the validator, or an error if retrieval fails
 func (s *Server) GetValidator(addr string) (stakingtypes.Validator, error) {
 	var result stakingtypes.Validator
 
@@ -32,6 +36,11 @@ func (s *Server) GetValidator(addr string) (stakingtypes.Validator, error) {
 	return resp.Validator, nil
 }
 
+// GetValidatorList retrieves a list of validators with pagination.
+//
+// @param offset the offset for pagination
+// @param pageSize the page size for pagination
+// @return a list of validators, the total count, or an error if retrieval fails
 func (s *Server) GetValidatorList(offset uint64, pageSize uint64) ([]stakingtypes.Validator, uint64, error) {
 	if err := s.KeepGrpcConn(); err != nil {
 		log.Printf("error when keep grpc conn, endpoint: %v, err: %v", s.EndPoint, err.Error())

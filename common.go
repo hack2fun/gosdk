@@ -3,7 +3,7 @@ package gosdk
 import "time"
 
 const (
-	GovToken                    = "CGT"
-	PlatformToken               = "CYS"
-	BlockTime     time.Duration = 10 * time.Second
+	CGTToken                = "CGT"
+	CYSToken                = "CYS"
+	BlockTime time.Duration = 10 * time.Second
 )
