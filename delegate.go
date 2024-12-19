@@ -12,9 +12,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// QueryDelegatorDelegations
-func (s *Server) QueryDelegatorDelegations(delegatorAddress string) ([]sdk.Coin, error) {
-	result := make([]sdk.Coin, 0)
+// QueryDelegatorDelegations retrieves the delegations of a delegator across all validators.
+//
+// @param delegatorAddress the address of the delegator
+// @return a map where each key is a validator address and the value is a list of coins representing the delegator's delegations to that validator, or an error if the query fails
+func (s *Server) QueryDelegatorDelegations(delegatorAddress string) (map[string][]sdk.Coin, error) {
+	result := make(map[string][]sdk.Coin)
 	if err := s.KeepGrpcConn(); err != nil {
 		log.Printf("error when keep grpc conn, endpoint: %v, err: %v", s.EndPoint, err.Error())
 		return result, err
@@ -22,7 +25,7 @@ func (s *Server) QueryDelegatorDelegations(delegatorAddress string) ([]sdk.Coin,
 
 	client := stakingtypes.NewQueryClient(s.Conn)
 
-	targetAddr, err := ConvertToCosmosAddress(delegatorAddress)
+	targetAddr, err := ConvertToCysicAddress(delegatorAddress)
 	if err != nil {
 		log.Printf("error when convert addr: %v to cosmosAddr, err: %v", delegatorAddress, err.Error())
 		return result, err
@@ -38,32 +41,48 @@ func (s *Server) QueryDelegatorDelegations(delegatorAddress string) ([]sdk.Coin,
 		return result, err
 	}
 
-	resultMap := make(map[string]sdk.Coin)
+	resultMap := make(map[string]map[string]sdk.Coin)
 	for _, info := range resp.DelegationResponses {
+		if _, exist := resultMap[info.Delegation.ValidatorAddress]; !exist {
+			resultMap[info.Delegation.ValidatorAddress] = make(map[string]sdk.Coin)
+		}
+		validatorResult := resultMap[info.Delegation.ValidatorAddress]
+
 		balance := info.Balance
-		if old, exist := resultMap[balance.Denom]; !exist {
-			resultMap[balance.Denom] = sdk.Coin{
+		if old, exist := validatorResult[balance.Denom]; !exist {
+			validatorResult[balance.Denom] = sdk.Coin{
 				Denom:  balance.Denom,
 				Amount: balance.Amount,
 			}
 		} else {
-			resultMap[balance.Denom] = sdk.Coin{
+			validatorResult[balance.Denom] = sdk.Coin{
 				Denom:  balance.Denom,
 				Amount: old.Amount.Add(balance.Amount),
 			}
 		}
+
+		resultMap[info.Delegation.ValidatorAddress] = validatorResult
 	}
 
-	for _, info := range resultMap {
-		result = append(result, info)
+	for validator, info := range resultMap {
+		if _, exist := result[validator]; !exist {
+			result[validator] = make([]sdk.Coin, 0)
+		}
+
+		for _, coin := range info {
+			result[validator] = append(result[validator], coin)
+		}
 	}
 
 	return result, nil
 }
 
-// QueryDelegateReward
-func (s *Server) QueryDelegateReward(delegatorAddress string) ([]sdk.Coin, error) {
-	result := make([]sdk.Coin, 0)
+// QueryDelegateReward retrieves the total rewards for a delegator across all validators.
+//
+// @param delegatorAddress the address of the delegator
+// @return a map where each key is a validator address and the value is a list of coins representing the total rewards earned by the delegator from that validator, or an error if the query fails
+func (s *Server) QueryDelegateReward(delegatorAddress string) (map[string][]sdk.Coin, error) {
+	result := make(map[string][]sdk.Coin)
 	if err := s.KeepGrpcConn(); err != nil {
 		log.Printf("error when keep grpc conn, endpoint: %v, err: %v", s.EndPoint, err.Error())
 		return result, err
@@ -71,7 +90,7 @@ func (s *Server) QueryDelegateReward(delegatorAddress string) ([]sdk.Coin, error
 
 	client := distributiontypes.NewQueryClient(s.Conn)
 
-	targetAddr, err := ConvertToCosmosAddress(delegatorAddress)
+	targetAddr, err := ConvertToCysicAddress(delegatorAddress)
 	if err != nil {
 		log.Printf("error when convert addr: %v to cosmosAddr, err: %v", delegatorAddress, err.Error())
 		return result, err
@@ -87,29 +106,48 @@ func (s *Server) QueryDelegateReward(delegatorAddress string) ([]sdk.Coin, error
 		return result, err
 	}
 
-	resultMap := make(map[string]sdk.Coin)
-	for _, balance := range resp.Total {
-		if old, exist := resultMap[balance.Denom]; !exist {
-			resultMap[balance.Denom] = sdk.Coin{
-				Denom:  balance.Denom,
-				Amount: balance.Amount.RoundInt(),
-			}
-		} else {
-			resultMap[balance.Denom] = sdk.Coin{
-				Denom:  balance.Denom,
-				Amount: old.Amount.Add(balance.Amount.RoundInt()),
+	resultMap := make(map[string]map[string]sdk.Coin)
+	for _, reward := range resp.Rewards {
+		if _, exist := resultMap[reward.ValidatorAddress]; !exist {
+			resultMap[reward.ValidatorAddress] = make(map[string]sdk.Coin)
+		}
+		validatorResult := resultMap[reward.ValidatorAddress]
+
+		for _, coin := range reward.Reward {
+			if old, exist := validatorResult[coin.Denom]; !exist {
+				validatorResult[coin.Denom] = sdk.Coin{
+					Denom:  coin.Denom,
+					Amount: coin.Amount.RoundInt(),
+				}
+			} else {
+				validatorResult[coin.Denom] = sdk.Coin{
+					Denom:  coin.Denom,
+					Amount: old.Amount.Add(coin.Amount.RoundInt()),
+				}
 			}
 		}
+
+		resultMap[reward.ValidatorAddress] = validatorResult
 	}
 
-	for _, info := range resultMap {
-		result = append(result, info)
+	for validator, info := range resultMap {
+		if _, exist := result[validator]; !exist {
+			result[validator] = make([]sdk.Coin, 0)
+		}
+
+		for _, coin := range info {
+			result[validator] = append(result[validator], coin)
+		}
 	}
 
 	return result, nil
 }
 
-// WithdrawDelegatorReward
+// WithdrawDelegatorReward withdraws rewards for a delegator.
+//
+// @param signer the Signer instance used to sign the transaction
+// @param validatorAddress the address of the validator
+// @return the transaction hash as a string, or an error if the withdrawal fails
 func (s *Server) WithdrawDelegatorReward(signer Signer, validatorAddress string) (string, error) {
 	delegatorAddr := signer.CosmosAddr.String()
 
@@ -130,7 +168,13 @@ func (s *Server) WithdrawDelegatorReward(signer Signer, validatorAddress string)
 	return s.buildAndBroadcastCosmosTx(signer, []sdk.Msg{msg})
 }
 
-// DelegateVeToken
+// DelegateVeToken delegates veTokens to a validator.
+//
+// @param signer the Signer instance used to sign the transaction
+// @param validatorAddress the address of the validator
+// @param coin the token to delegate
+// @param amount the amount to delegate
+// @return the transaction hash as a string, or an error if the delegation fails
 func (s *Server) DelegateVeToken(signer Signer, validatorAddress string, coin string, amount math.Int) (string, error) {
 	msg := &delegatetypes.MsgDelegate{
 		Worker:    signer.EthAddr.String(),
@@ -151,13 +195,18 @@ func (s *Server) DelegateVeToken(signer Signer, validatorAddress string, coin st
 	return s.buildAndBroadcastCosmosTx(signer, []sdk.Msg{msg})
 }
 
-// DelegateCGT
+// DelegateCGT delegates CGT tokens to a validator.
+//
+// @param signer the Signer instance used to sign the transaction
+// @param validatorAddress the address of the validator
+// @param amount the amount to delegate
+// @return the transaction hash as a string, or an error if the delegation fails
 func (s *Server) DelegateCGT(signer Signer, validatorAddress string, amount math.Int) (string, error) {
 	msg := &stakingtypes.MsgDelegate{
 		DelegatorAddress: signer.CosmosAddr.String(),
 		ValidatorAddress: validatorAddress,
 		Amount: sdk.Coin{
-			Denom:  GovToken,
+			Denom:  CGTToken,
 			Amount: amount,
 		},
 	}
@@ -174,13 +223,18 @@ func (s *Server) DelegateCGT(signer Signer, validatorAddress string, amount math
 	return s.buildAndBroadcastCosmosTx(signer, []sdk.Msg{msg})
 }
 
-// UnDelegateCGT
+// UnDelegateCGT undelegates CGT tokens from a validator.
+//
+// @param signer the Signer instance used to sign the transaction
+// @param validatorAddress the address of the validator
+// @param amount the amount to undelegate
+// @return the transaction hash as a string, or an error if the undelegation fails
 func (s *Server) UnDelegateCGT(signer Signer, validatorAddress string, amount math.Int) (string, error) {
 	msg := &stakingtypes.MsgUndelegate{
 		DelegatorAddress: signer.CosmosAddr.String(),
 		ValidatorAddress: validatorAddress,
 		Amount: sdk.Coin{
-			Denom:  GovToken,
+			Denom:  CGTToken,
 			Amount: amount,
 		},
 	}

@@ -5,29 +5,29 @@
 
 ## function list
 
-- Bank
+- [Account](./account.go)
+  - GetAccountByAddr
+  - BroadcastTx
+- [Bank](./bank.go)
   - GetBalance
   - GetBalanceList
   - Send
   - MultiSend
   - MultiSendWithDiffAmount
-- Validator
+- [Validator](./validator.go)
   - GetValidator
   - GetValidatorList
-- Delegate
+- [Delegate](./delegate.go)
   - QueryDelegatorDelegations
   - QueryDelegateReward
   - WithdrawDelegatorReward
   - DelegateVeToken
   - DelegateCGT
   - UnDelegateCGT
-- Exchange
+- [Exchange](./exchange.go)
   - ExchangeToGovToken
   - ExchangeToPlatformToken
-- Account
-  - GetAccountByAddr
-  - BroadcastTx
-- utils
+- [utils](./utils.go)
   - ConvertAddress
-  - ConvertToCosmosAddress
+  - ConvertToCysicAddress
   - ConvertToETHAddress

@@ -23,6 +23,10 @@ type Signer struct {
 	Nonce      uint64
 }
 
+// NewSignerWithPrivateKey creates a new Signer instance from a private key.
+//
+// @param bz the private key bytes
+// @return a new Signer instance
 func NewSignerWithPrivateKey(bz []byte) *Signer {
 	bzArr := make([]byte, ethsecp256k1.PrivKeySize)
 	copy(bzArr, bz)
@@ -40,6 +44,13 @@ func NewSignerWithPrivateKey(bz []byte) *Signer {
 	}
 }
 
+// NewSignerWithMnemonic creates a new Signer instance from a mnemonic and HD path.
+//
+// @param mnemonic the mnemonic phrase
+// @param passphrase the passphrase for the mnemonic
+// @param hdPath the HD path to derive the key
+// @param algo the signing algorithm to use
+// @return a new Signer instance, or an error if derivation fails
 func NewSignerWithMnemonic(mnemonic string, passphrase string, hdPath string, algo string) (*Signer, error) {
 	kb := keyring.NewInMemory(simapp.MakeTestEncodingConfig().Codec, etherminthd.EthSecp256k1Option())
 	keyringAlgoList, _ := kb.SupportedAlgorithms()
@@ -68,6 +79,12 @@ func NewSignerWithMnemonic(mnemonic string, passphrase string, hdPath string, al
 	}, nil
 }
 
+// VerifyEthPersonalSignature verifies an Ethereum personal signature.
+//
+// @param address the address that signed the data
+// @param data the data that was signed
+// @param sig the signature to verify
+// @return true if the signature is valid, false otherwise
 func VerifyEthPersonalSignature(address string, data []byte, sig []byte) bool {
 	sigHash, _ := accounts.TextAndHash(data)
 
@@ -86,6 +103,11 @@ func VerifyEthPersonalSignature(address string, data []byte, sig []byte) bool {
 	return recoverAddress == common.HexToAddress(address)
 }
 
+// EthPersonalSign signs data using the Ethereum personal sign algorithm.
+//
+// @param s the Signer instance
+// @param data the data to sign
+// @return the signature, or an error if signing fails
 func (s *Signer) EthPersonalSign(data []byte) ([]byte, error) {
 	waitSignHash, _ := accounts.TextAndHash(data)
 
@@ -99,6 +121,12 @@ func (s *Signer) EthPersonalSign(data []byte) ([]byte, error) {
 	return crypto.Sign(waitSignHash, privKey)
 }
 
+// VerifyEthPersonalSignature verifies an Ethereum personal signature for the signer.
+//
+// @param s the Signer instance
+// @param data the data that was signed
+// @param sig the signature to verify
+// @return true if the signature is valid, false otherwise
 func (s *Signer) VerifyEthPersonalSignature(data []byte, sig []byte) bool {
 	return VerifyEthPersonalSignature(s.EthAddr.String(), data, sig)
 }
