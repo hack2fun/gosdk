@@ -12,12 +12,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// QueryDelegatorDelegations queries the delegations of a delegator.
+// QueryDelegatorDelegations retrieves the delegations of a delegator across all validators.
 //
 // @param delegatorAddress the address of the delegator
-// @return a list of coins representing the delegations, or an error if the query fails
-func (s *Server) QueryDelegatorDelegations(delegatorAddress string) ([]sdk.Coin, error) {
-	result := make([]sdk.Coin, 0)
+// @return a map where each key is a validator address and the value is a list of coins representing the delegator's delegations to that validator, or an error if the query fails
+func (s *Server) QueryDelegatorDelegations(delegatorAddress string) (map[string][]sdk.Coin, error) {
+	result := make(map[string][]sdk.Coin, 0)
 	if err := s.KeepGrpcConn(); err != nil {
 		log.Printf("error when keep grpc conn, endpoint: %v, err: %v", s.EndPoint, err.Error())
 		return result, err
@@ -41,24 +41,37 @@ func (s *Server) QueryDelegatorDelegations(delegatorAddress string) ([]sdk.Coin,
 		return result, err
 	}
 
-	resultMap := make(map[string]sdk.Coin)
+	resultMap := make(map[string]map[string]sdk.Coin)
 	for _, info := range resp.DelegationResponses {
+		if _, exist := resultMap[info.Delegation.ValidatorAddress]; !exist {
+			resultMap[info.Delegation.ValidatorAddress] = make(map[string]sdk.Coin)
+		}
+		validatorResult := resultMap[info.Delegation.ValidatorAddress]
+
 		balance := info.Balance
-		if old, exist := resultMap[balance.Denom]; !exist {
-			resultMap[balance.Denom] = sdk.Coin{
+		if old, exist := validatorResult[balance.Denom]; !exist {
+			validatorResult[balance.Denom] = sdk.Coin{
 				Denom:  balance.Denom,
 				Amount: balance.Amount,
 			}
 		} else {
-			resultMap[balance.Denom] = sdk.Coin{
+			validatorResult[balance.Denom] = sdk.Coin{
 				Denom:  balance.Denom,
 				Amount: old.Amount.Add(balance.Amount),
 			}
 		}
+
+		resultMap[info.Delegation.ValidatorAddress] = validatorResult
 	}
 
-	for _, info := range resultMap {
-		result = append(result, info)
+	for validator, info := range resultMap {
+		if _, exist := result[validator]; !exist {
+			result[validator] = make([]sdk.Coin, 0)
+		}
+
+		for _, coin := range info {
+			result[validator] = append(result[validator], coin)
+		}
 	}
 
 	return result, nil
