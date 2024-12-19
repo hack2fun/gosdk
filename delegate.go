@@ -17,7 +17,7 @@ import (
 // @param delegatorAddress the address of the delegator
 // @return a map where each key is a validator address and the value is a list of coins representing the delegator's delegations to that validator, or an error if the query fails
 func (s *Server) QueryDelegatorDelegations(delegatorAddress string) (map[string][]sdk.Coin, error) {
-	result := make(map[string][]sdk.Coin, 0)
+	result := make(map[string][]sdk.Coin)
 	if err := s.KeepGrpcConn(); err != nil {
 		log.Printf("error when keep grpc conn, endpoint: %v, err: %v", s.EndPoint, err.Error())
 		return result, err
@@ -77,12 +77,12 @@ func (s *Server) QueryDelegatorDelegations(delegatorAddress string) (map[string]
 	return result, nil
 }
 
-// QueryDelegateReward queries the rewards for a delegator.
+// QueryDelegateReward retrieves the total rewards for a delegator across all validators.
 //
 // @param delegatorAddress the address of the delegator
-// @return a list of coins representing the rewards, or an error if the query fails
-func (s *Server) QueryDelegateReward(delegatorAddress string) ([]sdk.Coin, error) {
-	result := make([]sdk.Coin, 0)
+// @return a map where each key is a validator address and the value is a list of coins representing the total rewards earned by the delegator from that validator, or an error if the query fails
+func (s *Server) QueryDelegateReward(delegatorAddress string) (map[string][]sdk.Coin, error) {
+	result := make(map[string][]sdk.Coin)
 	if err := s.KeepGrpcConn(); err != nil {
 		log.Printf("error when keep grpc conn, endpoint: %v, err: %v", s.EndPoint, err.Error())
 		return result, err
@@ -106,23 +106,38 @@ func (s *Server) QueryDelegateReward(delegatorAddress string) ([]sdk.Coin, error
 		return result, err
 	}
 
-	resultMap := make(map[string]sdk.Coin)
-	for _, balance := range resp.Total {
-		if old, exist := resultMap[balance.Denom]; !exist {
-			resultMap[balance.Denom] = sdk.Coin{
-				Denom:  balance.Denom,
-				Amount: balance.Amount.RoundInt(),
-			}
-		} else {
-			resultMap[balance.Denom] = sdk.Coin{
-				Denom:  balance.Denom,
-				Amount: old.Amount.Add(balance.Amount.RoundInt()),
+	resultMap := make(map[string]map[string]sdk.Coin)
+	for _, reward := range resp.Rewards {
+		if _, exist := resultMap[reward.ValidatorAddress]; !exist {
+			resultMap[reward.ValidatorAddress] = make(map[string]sdk.Coin)
+		}
+		validatorResult := resultMap[reward.ValidatorAddress]
+
+		for _, coin := range reward.Reward {
+			if old, exist := validatorResult[coin.Denom]; !exist {
+				validatorResult[coin.Denom] = sdk.Coin{
+					Denom:  coin.Denom,
+					Amount: coin.Amount.RoundInt(),
+				}
+			} else {
+				validatorResult[coin.Denom] = sdk.Coin{
+					Denom:  coin.Denom,
+					Amount: old.Amount.Add(coin.Amount.RoundInt()),
+				}
 			}
 		}
+
+		resultMap[reward.ValidatorAddress] = validatorResult
 	}
 
-	for _, info := range resultMap {
-		result = append(result, info)
+	for validator, info := range resultMap {
+		if _, exist := result[validator]; !exist {
+			result[validator] = make([]sdk.Coin, 0)
+		}
+
+		for _, coin := range info {
+			result[validator] = append(result[validator], coin)
+		}
 	}
 
 	return result, nil
