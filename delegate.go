@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	delegatetypes "github.com/cysic-tech/gosdk/types/delegate"
+	delegatetypes "github.com/hack2fun/gosdk/types/delegate"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"

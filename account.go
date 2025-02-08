@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authSigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authTypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	cysicTypes "github.com/cysic-tech/gosdk/types/cysic"
+	cysicTypes "github.com/hack2fun/gosdk/types/cysic"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

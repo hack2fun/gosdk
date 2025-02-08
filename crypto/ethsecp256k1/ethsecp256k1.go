@@ -21,8 +21,8 @@ import (
 	"crypto/subtle"
 	"fmt"
 
-	"github.com/cysic-tech/gosdk/ethereum/eip712"
-	
+	"github.com/hack2fun/gosdk/ethereum/eip712"
+
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

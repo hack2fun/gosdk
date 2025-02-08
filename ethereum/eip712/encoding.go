@@ -25,8 +25,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txTypes "github.com/cosmos/cosmos-sdk/types/tx"
 
-	types "github.com/cysic-tech/gosdk/types/cysic"
 	apitypes "github.com/ethereum/go-ethereum/signer/core/apitypes"
+	types "github.com/hack2fun/gosdk/types/cysic"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )

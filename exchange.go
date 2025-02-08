@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	govTokenTypes "github.com/cysic-tech/gosdk/types/govtoken"
+	govTokenTypes "github.com/hack2fun/gosdk/types/govtoken"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

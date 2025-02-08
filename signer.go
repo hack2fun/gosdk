@@ -3,8 +3,8 @@ package gosdk
 import (
 	"log"
 
-	"github.com/cysic-tech/gosdk/crypto/ethsecp256k1"
-	etherminthd "github.com/cysic-tech/gosdk/crypto/hd"
+	"github.com/hack2fun/gosdk/crypto/ethsecp256k1"
+	etherminthd "github.com/hack2fun/gosdk/crypto/hd"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/types"

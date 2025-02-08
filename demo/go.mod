@@ -3,13 +3,13 @@ module demo
 go 1.23.4
 
 replace (
-	github.com/cysic-tech/gosdk => ../
+	github.com/hack2fun/gosdk => ../
 )
 
 require (
 	cosmossdk.io/math v1.0.0-rc.0
 	github.com/cosmos/cosmos-sdk v0.46.16
-	github.com/cysic-tech/gosdk v0.0.0-00010101000000-000000000000
+	github.com/hack2fun/gosdk v0.0.0-00010101000000-000000000000
 	github.com/shopspring/decimal v1.4.0
 	google.golang.org/grpc v1.54.0
 )

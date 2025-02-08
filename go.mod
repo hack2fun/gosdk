@@ -1,4 +1,4 @@
-module github.com/cysic-tech/gosdk
+module github.com/hack2fun/gosdk
 
 go 1.22.3
 

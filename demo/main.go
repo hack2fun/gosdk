@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	cysicSDK "github.com/cysic-tech/gosdk"
-	govTokenTypes "github.com/cysic-tech/gosdk/types/govtoken"
+	cysicSDK "github.com/hack2fun/gosdk"
+	govTokenTypes "github.com/hack2fun/gosdk/types/govtoken"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
